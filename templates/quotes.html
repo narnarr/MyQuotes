@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8"/>
+    <title>My Quotes</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!--Material Design-->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <!--Google Fonts-->
+    <link href="https://fonts.googleapis.com/css2?family=Acme&family=Amatic+SC:wght@700&display=swap"
+          rel="stylesheet">
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+                $("#caption-style-1").html("");
+                showQuotes();
+            });
+
+        function showQuotes() {
+            $.ajax({
+                    type: "GET",
+                    url: "/quote",
+                    data: {},
+                    success: function (response) {
+                        if (response["result"] == "success") {
+                            let quotes = response['quotes'];
+                            for (let i=0; i<quotes.length; i++) {
+                                let {title, image, quote} = quotes[i];
+                                makeQuote(title, image, quote);
+                            }
+                        } else {
+                            alert("정보를 받아오지 못했습니다");
+                        }
+                    }
+                })
+        }
+        function makeQuote(title, image, quote) {
+            tempHTML = `
+            <li>
+                <img class="img-list" alt="" src="${image}"/>
+                        <div class="caption">
+                            <div class="blur"></div>
+                            <div class="caption-text">
+                                <h1>"${quote}"</h1>
+                                <p>${title}</p>
+                            </div>
+                        </div>
+                    </li>
+            `;
+            $('#caption-style-1').append(tempHTML);
+        }
+
+    </script>
+
+    <style type="text/css">
+        body {
+            padding: 20px 30px;
+            margin: 0px;
+        }
+        .container-a1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .img-list {
+            object-fit: cover;
+            height: 300px;
+            width: 400px;
+        }
+
+        .img-l {
+            margin: 10px;
+        }
+
+        .caption-style-1 {
+            list-style-type: none;
+            margin: 0px;
+            padding: 0px;
+        }
+
+        .caption-style-1 li {
+            float: left;
+            padding: 0px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .caption-style-1 li:hover .caption {
+            opacity: 1;
+        }
+
+        .caption-style-1 img {
+            margin: 0px;
+            padding: 0px;
+            float: left;
+            z-index: 4;
+        }
+
+        .caption-style-1 .caption {
+            cursor: pointer;
+            position: absolute;
+            opacity: 0;
+            -webkit-transition: all 0.45s ease-in-out;
+            -moz-transition: all 0.45s ease-in-out;
+            -o-transition: all 0.45s ease-in-out;
+            -ms-transition: all 0.45s ease-in-out;
+            transition: all 0.45s ease-in-out;
+
+        }
+
+        .caption-style-1 .blur {
+            background-color: rgba(0, 0, 0, 0.65);
+            height: 300px;
+            width: 400px;
+            z-index: 5;
+            position: absolute;
+        }
+
+        .caption-style-1 .caption-text h1 {
+            text-transform: uppercase;
+            font-size: 24px;
+        }
+
+        .caption-style-1 .caption-text {
+            z-index: 10;
+            color: #fff;
+            position: absolute;
+            width: 400px;
+            height: 300px;
+            text-align: center;
+            top: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-layout-transparent mdl-layout mdl-js-layout">
+        <header class="mdl-layout__header mdl-layout__header--transparent">
+            <div class="mdl-layout__header-row">
+                <!-- Title -->
+                <span class="mdl-layout-title">MyQuotes</span>
+                <!-- Add spacer, to align navigation to the right -->
+                <div class="mdl-layout-spacer"></div>
+                <!-- Navigation -->
+                <nav class="mdl-navigation">
+                    <a class="mdl-navigation__link-hi" location.href="quotes.html">Post</a>
+                    <a class="mdl-navigation__link" href="https://www.instagram.com/for__sythia">Instagram</a>
+                    <a class="mdl-navigation__link" href="https://blog.naver.com/zachary911">N-Blog</a>
+                    <a class="mdl-navigation__link" href="">Study</a>
+                </nav>
+            </div>
+        </header>
+        <div class="mdl-layout__drawer">
+            <span class="mdl-layout-title">MyQuotes</span>
+            <nav class="mdl-navigation">
+                <a class="mdl-navigation__link" location.href="quotes.html">Post</a>
+                <a class="mdl-navigation__link" href="https://www.instagram.com/for__sythia">Instagram</a>
+                <a class="mdl-navigation__link" href="https://blog.naver.com/zachary911">N-Blog</a>
+                <a class="mdl-navigation__link" href="">Study</a>
+            </nav>
+        </div>
+        <main class="mdl-layout__content">
+            <div class="container-a1">
+                <ul class="caption-style-1">
+                    <li>
+                        <img class="img-list" alt=""
+                             src="https://images-na.ssl-images-amazon.com/images/S/pv-target-images/93842fb558722f795af184af186ff66b1ad46a1b78823857ebcd14b5d742ffdb._RI_V_TTW_.jpg"/>
+                        <div class="caption">
+                            <div class="blur"></div>
+                            <div class="caption-text">
+                                <h1>Amazing Caption</h1>
+                                <p>Whatever It Is - Always Awesome</p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
