@@ -28,7 +28,7 @@
             $(document).ready(function () {
                 $('#img-container').empty();
                 checkLogStatus();
-                showQuotes();
+                showMyQuotes();
             });
 
             function checkLogStatus() {
@@ -39,16 +39,6 @@
                     $('#loginout').text('Log out');
                     // 쿠키가 있으면, 유저 정보를 불러옵니다.
                     load_user_info();
-                }
-            };
-
-            function logInOut() {
-                if ($.cookie('mytoken') == undefined) {
-                    window.location.href = '/login';
-                } else {
-                    $.removeCookie('mytoken');
-                    alert('Logged out!');
-                    window.location.reload();
                 }
             };
 
@@ -72,42 +62,11 @@
                 })
             }
 
-            function writeQuote() {
-                let title = $('#title').val();
-                let image = $('#img_url').val();
-                let quote = $('#quote').val();
-                let token = $.cookie('mytoken');
-                $.ajax({
-                    type: "POST",
-                    url: "/quote",
-                    data: {'title': title, 'image': image, 'quote': quote, 'token': token},
-                    success: function (response) {
-                        if (response["result"] == "success") {
-                            alert(response["msg"]);
-                            window.location.reload();
-                        }
-                    }
-                })
-            }
-
-            function checkBlank() {
-                if ($.cookie('mytoken') == undefined) {
-                    alert('Please Login!');
-                } else if ($('#title').val() === "") {
-                    alert('Please enter a title.');
-                } else if ($('#img_url').val() === "") {
-                    alert('Please enter an url.');
-                } else if ($('#quote').val() === "") {
-                    alert('Please enter a quote.');
-                } else {
-                    writeQuote();
-                }
-            }
-
-            function showQuotes() {
+            function showMyQuotes() {
                 $.ajax({
                     type: "GET",
-                    url: "/quote",
+                    url: "/api/mypage",
+                    headers: {'token_give': $.cookie('mytoken')},
                     data: {},
                     success: function (response) {
                         if (response["result"] == "success") {
@@ -157,28 +116,6 @@
             .mdl-layout-title {
                 font-family: 'Acme', sans-serif;
                 font-size: 35px;
-            }
-
-            .main-page {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 10% 0 20% 0;
-            }
-
-            .quote-box {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                flex-direction: column;
-                width: 400px;
-                height: 340px;
-                background-color: rgba(255, 255, 255, 0.7);
-                border-radius: 3px;
-            }
-
-            .mdl-textfield__label, .mdl-button {
-                color: #5e849a;
             }
 
             .img-quote {
@@ -274,7 +211,7 @@
                     <div class="mdl-layout-spacer"></div>
                     <!-- Navigation -->
                     <nav class="mdl-navigation">
-                        <a class="mdl-navigation__link" id="nickname" href="/mypage"></a>
+                        <a class="mdl-navigation__link" id="nickname" href="window.location.href='/myPage'"></a>
                         <a class="mdl-navigation__link" id="loginout" onclick="logInOut()">login</a>
                         <a class="mdl-navigation__link" href="https://www.imdb.com/" target="_blank">IMDb</a>
                         <a class="mdl-navigation__link" href="https://pedia.watcha.com/" target="_blank">Watchapedia</a>
@@ -286,34 +223,6 @@
             </div>
 
             <main class="mdl-layout__content">
-                <div class="main-page">
-                    <div class="quote-box">
-                        <!-- Floating Multiline Textfield -->
-                        <!-- Textfield with Floating Label -->
-                        <form action="#">
-                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                <input class="mdl-textfield__input" type="text" id="title">
-                                <label class="mdl-textfield__label" for="title">Title</label>
-                            </div>
-                        </form>
-                        <form action="#">
-                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                <input class="mdl-textfield__input" type="text" id="img_url">
-                                <label class="mdl-textfield__label" for="img_url">Image URL</label>
-                            </div>
-                        </form>
-                        <form action="#">
-                            <div class="mdl-textfield mdl-js-textfield">
-                                <textarea class="mdl-textfield__input" type="text" rows="3" id="quote"></textarea>
-                                <label class="mdl-textfield__label" for="quote">Quote</label>
-                            </div>
-                        </form>
-                        <!-- Flat button with ripple -->
-                        <a onclick="checkBlank()" class="mdl-button mdl-js-button mdl-js-ripple-effect">
-                            Save
-                        </a>
-                    </div>
-                </div>
                 <div class="img-box">
                     <ul class="caption-style-1" id="img-container">
                         <li>
