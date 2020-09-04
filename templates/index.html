@@ -1,16 +1,11 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
     <head>
-        <!-- Webpage Title -->
-        <title>MY Quotes</title>
-
-        <!-- Required meta tags -->
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta charset="UTF-8">
+        <title>MyQuotes</title>
         <!-- JS -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
-
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
                 integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
                 crossorigin="anonymous"></script>
@@ -22,25 +17,34 @@
         <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
         <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
         <!--Google Fonts-->
-        <link href="https://fonts.googleapis.com/css2?family=Acme&family=Lobster+Two:ital,wght@1,700&family=Amatic+SC:wght@700&display=swap"
+        <link href="https://fonts.googleapis.com/css2?family=Acme&family=Lobster+Two:ital,wght@1,700&family=Yanone+Kaffeesatz:wght@600&display=swap"
               rel="stylesheet">
+        <!-- menu-icon -->
+        <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+
         <script>
             $(document).ready(function () {
                 $('#img-container').empty();
-                checkLogStatus();
+                changeLogStatus();
                 showQuotes();
-            });
+            })
 
-            function checkLogStatus() {
+            function openNav() {
+                document.getElementById("mySidenav").style.width = "250px";
+            }
+
+            function closeNav() {
+                document.getElementById("mySidenav").style.width = "0";
+            }
+
+            function changeLogStatus() {
                 if ($.cookie('mytoken') == undefined) {
-                    // mytoken이라는 값으로 쿠키가 없으면, 로그인 창으로 이동시킵니다.
                     $('#loginout').text('Log in');
                 } else {
                     $('#loginout').text('Log out');
-                    // 쿠키가 있으면, 유저 정보를 불러옵니다.
                     load_user_info();
                 }
-            };
+            }
 
             function logInOut() {
                 if ($.cookie('mytoken') == undefined) {
@@ -50,9 +54,8 @@
                     alert('Logged out!');
                     window.location.reload();
                 }
-            };
+            }
 
-            // 쿠키에 가지고 있는 token을 헤더에 담아서 보냅니다.
             function load_user_info() {
                 $.ajax({
                     type: "GET",
@@ -72,6 +75,23 @@
                 })
             }
 
+            function checkBlank() {
+                if ($.cookie('mytoken') == undefined) {
+                    alert('Please Login!');
+                } else if ($('#title').val() === "") {
+                    alert('Please enter a title.');
+                    $('#title').focus();
+                } else if ($('#img_url').val() === "") {
+                    alert('Please enter the url.');
+                    $('#img_url').focus();
+                } else if ($('#quote').val() === "") {
+                    alert('Please enter the quote.');
+                    $('#quote').focus();
+                } else {
+                    writeQuote();
+                }
+            }
+
             function writeQuote() {
                 let title = $('#title').val();
                 let image = $('#img_url').val();
@@ -83,25 +103,72 @@
                     data: {'title': title, 'image': image, 'quote': quote, 'token': token},
                     success: function (response) {
                         if (response["result"] == "success") {
-                            alert(response["msg"]);
+                            showQuotes();
+                            alert(response['msg']);
                             window.location.reload();
                         }
                     }
                 })
+                scrollDown();
             }
 
-            function checkBlank() {
-                if ($.cookie('mytoken') == undefined) {
-                    alert('Please Login!');
-                } else if ($('#title').val() === "") {
-                    alert('Please enter a title.');
-                } else if ($('#img_url').val() === "") {
-                    alert('Please enter an url.');
-                } else if ($('#quote').val() === "") {
-                    alert('Please enter a quote.');
-                } else {
-                    writeQuote();
+            function searchTitle() {
+                console.log('click')
+                $('#myDropdown').empty();
+                let movie_title = $('#title').val();
+                $.ajax({
+                    type: "GET",
+                    url: "http://www.omdbapi.com/?apikey=f50e25d1&s=" + movie_title,
+                    data: {},
+                    success: function (response) {
+                        let movies = response["Search"];
+                        for (let i = 0; i < 4; i++) {
+                            let movieTitle = movies[i]["Title"];
+                            let movieYear = movies[i]["Year"];
+                            let moviePoster = movies[i]["Poster"];
+
+                            showResults(movieTitle, movieYear, moviePoster);
+                        }
+                    }
+                })
+                document.getElementById("myDropdown").classList.toggle("show");
+            }
+
+            function showResults(title, year, poster) {
+                let tempHTML = `
+                <li class="drop-info" onclick="selectMovie('${title}','${poster}')">
+                    <img class="drop-poster" src="${poster}">
+                    <div class="drop-wrap">
+                    <div class="drop-title">${title}</div>
+                    <div class="drop-year">${year}</div>
+                    </div>
+                </li>
+                `;
+                $('#myDropdown').append(tempHTML);
+            }
+
+            // Close the dropdown menu if the user clicks outside of it
+            window.onclick = function (event) {
+                if (!event.target.matches('.dropbtn')) {
+                    var dropdowns = document.getElementsByClassName("dropdown-content");
+                    var i;
+                    for (i = 0; i < dropdowns.length; i++) {
+                        var openDropdown = dropdowns[i];
+                        if (openDropdown.classList.contains('show')) {
+                            openDropdown.classList.remove('show');
+                        }
+                    }
                 }
+            }
+
+            function selectMovie(title,poster) {
+                $('#title').val(title);
+                $('#img_url').val(poster);
+            }
+
+            function scrollDown() {
+                var location = document.querySelector(".img-box").offsetTop;
+                window.scrollTo({top: location, behavior: 'smooth'});
             }
 
             function showQuotes() {
@@ -111,8 +178,34 @@
                     data: {},
                     success: function (response) {
                         if (response["result"] == "success") {
-                            let quotes = response['quotes'];
-                            for (let i = 0; i < quotes.length; i++) {
+                            let quotes = response['quotes'].reverse();
+                            for (let i = 0; i < 6; i++) {
+                                let {title, image, quote, userID} = quotes[i];
+                                makeQuote(title, image, quote, userID);
+                            }
+                        } else {
+                            alert("정보를 받아오지 못했습니다");
+                        }
+                    }
+                })
+            }
+
+            function pagination(page) {
+                $('.pagination a').removeClass('active');
+                let page_num = `#page_${page}`
+                $(page_num).addClass('active');
+                $.ajax({
+                    type: "GET",
+                    url: "/quote",
+                    data: {},
+                    success: function (response) {
+                        $('#img-container').empty();
+                        if (response["result"] == "success") {
+                            let quotes = response['quotes'].reverse();
+                            let start = (page - 1) * 6;
+                            let last = page * 6;
+
+                            for (let i = start; i < last; i++) {
                                 let {title, image, quote, userID} = quotes[i];
                                 makeQuote(title, image, quote, userID);
                             }
@@ -138,32 +231,128 @@
             `;
                 $('#img-container').append(tempHTML);
             }
-
         </script>
-        <style type="text/css">
-            .mdl-layout {
-                background: url('https://www.dga.org//-/media/Images/Landscape-Images/DGAQuarterly/1804Fall2018/DGAQFall2018ShotToRememberLittleMissSunshineHero.ashx?as=1&h=630&mh=630&mw=1200&w=630&hash=EEAFD4053AB463581B36643E5A1A1D03A82D36D1?t=12345') center / cover;
+
+        <style>
+            * {
+                font-family: 'Yanone Kaffeesatz', sans-serif;
+                font-size: 20px;
+                margin: 0;
+                padding: 0;
             }
 
-            * {
-                font-family: 'Amatic SC', cursive;
+            body {
+                /* make sure we use the full width but allow for more height */
+                width: 100%;
+                min-height: 100vh; /* this helps with the sticky footer */
+                overflow-x: hidden;
+                overflow-y: auto;
             }
+
+            .container {
+                background: url('https://www.dga.org//-/media/Images/Landscape-Images/DGAQuarterly/1804Fall2018/DGAQFall2018ShotToRememberLittleMissSunshineHero.ashx?as=1&h=630&mh=630&mw=1200&w=630&hash=EEAFD4053AB463581B36643E5A1A1D03A82D36D1?t=12345') no-repeat center center fixed;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+                min-height: calc(100vh);
+            }
+
             .logo {
                 height: 40px;
                 width: 155px;
                 object-fit: scale-down;
+                float: left;
+                margin: 6px;
             }
 
-            .mdl-layout-title {
-                font-family: 'Acme', sans-serif;
-                font-size: 35px;
+            .menu-icon {
+                float: left;
+                margin: 15px;
+            }
+
+            .menu-icon:hover, .head-nav:hover, .drop-wrap:hover {
+                cursor: pointer;
+            }
+
+            .sidenav {
+                height: 100%; /* 100% Full-height */
+                width: 0; /* 0 width - change this with JavaScript */
+                position: fixed; /* Stay in place */
+                z-index: 1; /* Stay on top */
+                top: 0; /* Stay at the top */
+                left: 0;
+                background-color: #ffffff;
+                opacity: 0.7;
+                overflow-x: hidden; /* Disable horizontal scroll */
+                padding-top: 60px; /* Place content 60px from the top */
+                transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+            }
+
+            /* The navigation menu links */
+            .sidenav a {
+                padding: 8px 8px 8px 32px;
+                text-decoration: none;
+                font-size: 25px;
+                color: #a15656;
+                display: block;
+                transition: 0.3s;
+            }
+
+            /* Position and style the close button (top right corner) */
+            .sidenav .closebtn {
+                position: absolute;
+                top: 0;
+                right: 25px;
+                font-size: 36px;
+                margin-left: 50px;
+            }
+
+            /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+            @media screen and (max-height: 450px) {
+                .sidenav {
+                    padding-top: 15px;
+                }
+
+                .sidenav a {
+                    font-size: 18px;
+                }
+            }
+
+            .top-nav {
+                list-style-type: none;
+                margin: 0;
+                overflow: hidden;
+                padding-right: 40px;
+                padding-left: 20px;
+                padding-top: 10px;
+            }
+
+            .head-nav {
+                float: right;
+            }
+
+            .head-nav a {
+                display: block;
+                color: white;
+                text-align: center;
+                padding: 14px 16px;
+                text-decoration: none;
+            }
+
+            .sidenav {
+                padding-top: 100px;
+            }
+
+            .sidemenu {
+                margin-bottom: 20px;
             }
 
             .main-page {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin: 10% 0 20% 0;
+                margin-top: 20vh;
             }
 
             .quote-box {
@@ -181,6 +370,87 @@
                 color: #5e849a;
             }
 
+            .dropbtn {
+                background-color: rgba(0, 0, 0, 0);
+                color: #5e849a;
+                padding: 3px;
+                font-size: 16px;
+                border: none;
+                cursor: pointer;
+            }
+
+            .dropbtn:hover, .dropbtn:focus {
+                background-color: #2980B9;
+            }
+
+            .dropdown {
+                position: relative;
+                display: inline-block;
+            }
+
+            /* Dropdown Content (Hidden by Default) */
+            .dropdown-content {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                background-color: #f1f1f1;
+                width: 300px;
+                box-shadow: 0px 8px 12px 0px rgba(0, 0, 0, 0.1);
+                z-index: 1;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+            }
+
+            .dropdown-content li {
+                color: black;
+                padding: 12px 16px;
+                text-decoration: none;
+            }
+
+            .dropdown-content li:hover {
+                background-color: #ddd
+            }
+
+            /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+            .show {
+                display: block;
+            }
+
+            .searchtitle {
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .drop-info {
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-start;
+            }
+
+            .drop-wrap {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+            }
+
+            .drop-info:hover {
+                background-color: #f5f5f5;
+            }
+
+            .drop-poster {
+                width: 50px;
+                max-height: 70px;
+                margin-bottom: 5px;
+                margin-right: 10px;
+            }
+
+            .bottom-part {
+                min-height: calc(100vh);
+            }
+
             .img-quote {
                 object-fit: cover;
                 height: 300px;
@@ -192,10 +462,14 @@
                 margin: 15px;
             }
 
+            .img-box {
+                height: 700px;
+            }
+
             .caption-style-1 {
                 list-style-type: none;
                 margin: 0px;
-                padding-bottom: 100px;
+                padding: 20px 0 20px 0;
                 display: flex;
                 flex-flow: row wrap;
                 justify-content: center;
@@ -218,8 +492,7 @@
                 z-index: 4;
             }
 
-            .caption-style-1 .caption {
-                cursor: pointer;
+            .caption {
                 position: absolute;
                 opacity: 0;
                 -webkit-transition: all 0.45s ease-in-out;
@@ -229,7 +502,7 @@
                 transition: all 0.45s ease-in-out;
             }
 
-            .caption-style-1 .blur {
+            .blur {
                 background-color: rgba(0, 0, 0, 0.65);
                 height: 300px;
                 width: 400px;
@@ -240,95 +513,147 @@
 
             .caption-style-1 .caption-text h1 {
                 font-family: 'Lobster Two', cursive;
+                color: #fffdf7;
                 font-size: 24px;
                 padding-left: 20px;
                 padding-right: 20px;
             }
 
-            .caption-style-1 .caption-text {
+            .caption-text {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
                 z-index: 10;
                 color: #fff;
                 position: absolute;
                 width: 400px;
                 height: 300px;
                 text-align: center;
-                top: 100px;
             }
-            .mdl-navigation__link:hover {
-                text-decoration: underline;
-                cursor: pointer;
+
+            .icon-part {
+                width: 23px;
+                height: 3px;
+                background-color: white;
+                margin: 5px 0;
+                border-radius: 2px;
+            }
+
+            /* Pagination links */
+            .pagination a {
+                background-color: rgba(255, 255, 255, 0.7);
+                color: black;
+                float: left;
+                padding: 8px 16px;
+                text-decoration: none;
+                transition: background-color .3s;
+            }
+
+            /* Style the active/current link */
+            .pagination a.active {
+                background-color: rgba(102, 172, 229, 0.7);
+                color: white;
+            }
+
+            /* Add a grey background color on mouse-over */
+            .pagination a:hover:not(.active) {
+                background-color: #ddd;
+            }
+
+            .pagination {
+                display: flex;
+                justify-content: center;
+                margin-bottom: 20px;
             }
         </style>
     </head>
     <body>
-        <div class="demo-layout-transparent mdl-layout mdl-js-layout">
-            <header class="mdl-layout__header mdl-layout__header--transparent">
-                <div class="mdl-layout__header-row">
+        <div class="container">
+            <nav>
+                <ul class="top-nav">
+                    <span class="menu-icon" onclick="openNav()">
+                        <div class="icon-part"></div>
+                        <div class="icon-part"></div>
+                        <div class="icon-part"></div>
+                    </span>
                     <!-- Title -->
-                    <div class="logo">
-                        <a href="/" class="mdl-layout-title" id="logo">
+                    <li class="logo">
+                        <a href="/" id="logo">
                             <img class="logo" src="{{ url_for('static', filename='myquotes-logo.png') }}"/>
                         </a>
-                    </div>
-                    <!-- Add spacer, to align navigation to the right -->
-                    <div class="mdl-layout-spacer"></div>
-                    <!-- Navigation -->
-                    <nav class="mdl-navigation">
-                        <a class="mdl-navigation__link" id="nickname" href="/mypage"></a>
-                        <a class="mdl-navigation__link" id="loginout" onclick="logInOut()">login</a>
-                        <a class="mdl-navigation__link" href="https://www.imdb.com/" target="_blank">IMDb</a>
-                        <a class="mdl-navigation__link" href="https://pedia.watcha.com/" target="_blank">Watchapedia</a>
-                    </nav>
-                </div>
-            </header>
-            <div class="mdl-layout__drawer">
-                <span class="mdl-layout-title">MyQuotes</span>
-            </div>
+                    </li>
+                    <li class="head-nav"><a href="https://pedia.watcha.com/" target="_blank">Watchpedia</a></li>
+                    <li class="head-nav"><a href="https://www.imdb.com/" target="_blank">IMDb</a></li>
+                    <li class="head-nav"><a id="loginout" onclick="logInOut()">login</a></li>
+                    <li class="head-nav"><a id="nickname" href="/mypage"></a></li>
+                </ul>
+            </nav>
+            <aside id="mySidenav" class="sidenav">
+                <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+                <a class="sidemenu" href="/mypage">My page</a>
+                <a class="sidemenu" href="#">Movies</a>
+                <a class="sidemenu" href="#">Other users</a>
+                <a class="sidemenu" href="#">Contact</a>
+            </aside>
 
-            <main class="mdl-layout__content">
-                <div class="main-page">
-                    <div class="quote-box">
-                        <!-- Floating Multiline Textfield -->
-                        <!-- Textfield with Floating Label -->
-                        <form action="#">
-                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <div class="main-page">
+                <div class="quote-box">
+                    <div>
+                        <div class="dropdown mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <div class="searchtitle">
                                 <input class="mdl-textfield__input" type="text" id="title">
-                                <label class="mdl-textfield__label" for="title">Title</label>
+                                <button onclick="searchTitle()" class="dropbtn"><i id="search-btn"
+                                                                                  class="fa fa-fw fa-search"></i>
+                                </button>
                             </div>
-                        </form>
-                        <form action="#">
-                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                <input class="mdl-textfield__input" type="text" id="img_url">
-                                <label class="mdl-textfield__label" for="img_url">Image URL</label>
-                            </div>
-                        </form>
-                        <form action="#">
-                            <div class="mdl-textfield mdl-js-textfield">
-                                <textarea class="mdl-textfield__input" type="text" rows="3" id="quote"></textarea>
-                                <label class="mdl-textfield__label" for="quote">Quote</label>
-                            </div>
-                        </form>
-                        <!-- Flat button with ripple -->
-                        <a onclick="checkBlank()" class="mdl-button mdl-js-button mdl-js-ripple-effect">
-                            Save
-                        </a>
+                            <label class="mdl-textfield__label" for="title">Title</label>
+
+                            <ul id="myDropdown" class="dropdown-content">
+                                <li class="drop-info" onclick="selectMovie('john wick')">
+                                    <img class="drop-poster"
+                                         src="https://images-na.ssl-images-amazon.com/images/I/71WiYBT2QsL._AC_SY741_.jpg">
+                                    <div class="drop-wrap">
+                                        <div class="drop-title">John Wick</div>
+                                        <div class="drop-year">2014</div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
+                    <form action="#">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="img_url">
+                            <label class="mdl-textfield__label" for="img_url">Image URL(Optional)</label>
+                        </div>
+                    </form>
+                    <form action="#">
+                        <div class="mdl-textfield mdl-js-textfield">
+                            <textarea class="mdl-textfield__input" type="text" rows="3" id="quote"></textarea>
+                            <label class="mdl-textfield__label" for="quote">Quote</label>
+                        </div>
+                    </form>
+                    <!-- Flat button with ripple -->
+                    <a onclick="checkBlank()" class="mdl-button mdl-js-button mdl-js-ripple-effect">
+                        Save
+                    </a>
                 </div>
-                <div class="img-box">
-                    <ul class="caption-style-1" id="img-container">
-                        <li>
-                            <img class="img-quote" alt=""
-                                 src="https://images-na.ssl-images-amazon.com/images/S/pv-target-images/93842fb558722f795af184af186ff66b1ad46a1b78823857ebcd14b5d742ffdb._RI_V_TTW_.jpg"/>
-                            <div class="caption">
-                                <div class="blur"></div>
-                                <div class="caption-text">
-                                    <h1>Amazing Caption</h1>
-                                    <p>Whatever It Is - Always Awesome</p>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </main>
+            </div>
+        </div>
+        <div class="bottom-part">
+            <div class="img-box">
+                <ul class="caption-style-1" id="img-container">
+                </ul>
+            </div>
+            <div class="pagination">
+                <a href="#">&laquo;</a>
+                <a id="page_1" onclick="pagination(1)">1</a>
+                <a id="page_2" onclick="pagination(2)">2</a>
+                <a id="page_3" onclick="pagination(3)">3</a>
+                <a id="page_4" onclick="pagination(4)">4</a>
+                <a id="page_5" onclick="pagination(5)">5</a>
+                <a id="page_6" onclick="pagination(6)">6</a>
+                <a href="#">&raquo;</a>
+            </div>
+        </div>
     </body>
 </html>

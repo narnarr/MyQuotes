@@ -1,183 +1,329 @@
-<!DOCTYPE html>
-<head>
-    <meta charset="utf-8"/>
-    <title>My Quotes</title>
+<!doctype html>
+<html lang="en">
+    <head>
+        <!-- Webpage Title -->
+        <title>MY Quotes</title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <!--Material Design-->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-    <!--Google Fonts-->
-    <link href="https://fonts.googleapis.com/css2?family=Acme&family=Amatic+SC:wght@700&display=swap"
-          rel="stylesheet">
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- JS -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
 
-    <script type="text/javascript">
-        $(document).ready(function () {
-                $("#caption-style-1").html("");
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+                integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+                crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+                integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+                crossorigin="anonymous"></script>
+        <!--Material Design-->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+        <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+        <!--Google Fonts-->
+        <link href="https://fonts.googleapis.com/css2?family=Acme&family=Lobster+Two:ital,wght@1,700&family=Amatic+SC:wght@700&display=swap"
+              rel="stylesheet">
+        <script>
+            $(document).ready(function () {
+                $('#img-container').empty();
+                checkLogStatus();
                 showQuotes();
             });
 
-        function showQuotes() {
-            $.ajax({
+            function checkLogStatus() {
+                if ($.cookie('mytoken') == undefined) {
+                    // mytoken이라는 값으로 쿠키가 없으면, 로그인 창으로 이동시킵니다.
+                    $('#loginout').text('Log in');
+                } else {
+                    $('#loginout').text('Log out');
+                    // 쿠키가 있으면, 유저 정보를 불러옵니다.
+                    load_user_info();
+                }
+            };
+
+            function logInOut() {
+                if ($.cookie('mytoken') == undefined) {
+                    window.location.href = '/login';
+                } else {
+                    $.removeCookie('mytoken');
+                    alert('Logged out!');
+                    window.location.reload();
+                }
+            };
+
+            // 쿠키에 가지고 있는 token을 헤더에 담아서 보냅니다.
+            function load_user_info() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/valid",
+                    headers: {'token_give': $.cookie('mytoken')},
+                    data: {},
+                    success: function (response) {
+                        if (response['result'] == 'success') {
+                            // 올바른 결과값을 받으면 userID을 입력해줍니다.
+                            $('#nickname').text('Hi, ' + response['userID'] + "!")
+                        } else {
+                            // 에러가 나면 메시지를 띄우고 로그인 창으로 이동합니다.
+                            alert(response['msg'])
+                            window.location.href = '/login'
+                        }
+                    }
+                })
+            }
+
+            function checkBlank() {
+                if ($.cookie('mytoken') == undefined) {
+                    alert('Please Login!');
+                } else if ($('#title').val() === "") {
+                    alert('Please enter a title.');
+                } else if ($('#img_url').val() === "") {
+                    alert('Please enter an url.');
+                } else if ($('#quote').val() === "") {
+                    alert('Please enter a quote.');
+                } else {
+                    writeQuote();
+                }
+            }
+
+            function writeQuote() {
+                let title = $('#title').val();
+                let image = $('#img_url').val();
+                let quote = $('#quote').val();
+                let token = $.cookie('mytoken');
+                $.ajax({
+                    type: "POST",
+                    url: "/quote",
+                    data: {'title': title, 'image': image, 'quote': quote, 'token': token},
+                    success: function (response) {
+                        if (response["result"] == "success") {
+                            alert(response["msg"]);
+                            $("#img-container").load(window.location.href + " #img-container");
+                            showQuotes();
+                        }
+                    }
+                })
+            }
+
+            function showQuotes() {
+                $.ajax({
                     type: "GET",
                     url: "/quote",
                     data: {},
                     success: function (response) {
                         if (response["result"] == "success") {
                             let quotes = response['quotes'];
-                            for (let i=0; i<quotes.length; i++) {
-                                let {title, image, quote} = quotes[i];
-                                makeQuote(title, image, quote);
+                            for (let i = 0; i < quotes.length; i++) {
+                                let {title, image, quote, userID} = quotes[i];
+                                makeQuote(title, image, quote, userID);
                             }
                         } else {
                             alert("정보를 받아오지 못했습니다");
                         }
                     }
                 })
-        }
-        function makeQuote(title, image, quote) {
-            tempHTML = `
-            <li>
-                <img class="img-list" alt="" src="${image}"/>
+            }
+
+            function makeQuote(title, image, quote, userID) {
+                tempHTML = `
+            <li class="img-list">
+                <img class="img-quote" alt="" src="${image}"/>
                         <div class="caption">
                             <div class="blur"></div>
                             <div class="caption-text">
                                 <h1>"${quote}"</h1>
-                                <p>${title}</p>
+                                <p>${title} - ${userID}</p>
                             </div>
                         </div>
                     </li>
             `;
-            $('#caption-style-1').append(tempHTML);
-        }
+                $('#img-container').append(tempHTML);
+            }
 
-    </script>
+        </script>
+        <style type="text/css">
+            .mdl-layout {
+                background: url('https://www.dga.org//-/media/Images/Landscape-Images/DGAQuarterly/1804Fall2018/DGAQFall2018ShotToRememberLittleMissSunshineHero.ashx?as=1&h=630&mh=630&mw=1200&w=630&hash=EEAFD4053AB463581B36643E5A1A1D03A82D36D1?t=12345') center / cover;
+            }
 
-    <style type="text/css">
-        body {
-            padding: 20px 30px;
-            margin: 0px;
-        }
-        .container-a1 {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+            * {
+                font-family: 'Amatic SC', cursive;
+            }
 
-        .img-list {
-            object-fit: cover;
-            height: 300px;
-            width: 400px;
-        }
+            .logo {
+                height: 40px;
+                width: 155px;
+                object-fit: scale-down;
+            }
 
-        .img-l {
-            margin: 10px;
-        }
+            .mdl-layout-title {
+                font-family: 'Acme', sans-serif;
+                font-size: 35px;
+            }
 
-        .caption-style-1 {
-            list-style-type: none;
-            margin: 0px;
-            padding: 0px;
-        }
+            .main-page {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 10% 0 20% 0;
+            }
 
-        .caption-style-1 li {
-            float: left;
-            padding: 0px;
-            position: relative;
-            overflow: hidden;
-        }
+            .quote-box {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+                width: 400px;
+                height: 340px;
+                background-color: rgba(255, 255, 255, 0.7);
+                border-radius: 3px;
+            }
 
-        .caption-style-1 li:hover .caption {
-            opacity: 1;
-        }
+            .mdl-textfield__label, .mdl-button {
+                color: #5e849a;
+            }
 
-        .caption-style-1 img {
-            margin: 0px;
-            padding: 0px;
-            float: left;
-            z-index: 4;
-        }
+            .img-quote {
+                object-fit: cover;
+                height: 300px;
+                width: 400px;
+                border-radius: 3px;
+            }
 
-        .caption-style-1 .caption {
-            cursor: pointer;
-            position: absolute;
-            opacity: 0;
-            -webkit-transition: all 0.45s ease-in-out;
-            -moz-transition: all 0.45s ease-in-out;
-            -o-transition: all 0.45s ease-in-out;
-            -ms-transition: all 0.45s ease-in-out;
-            transition: all 0.45s ease-in-out;
+            .img-list {
+                margin: 15px;
+            }
 
-        }
+            .caption-style-1 {
+                list-style-type: none;
+                margin: 0px;
+                padding-bottom: 100px;
+                display: flex;
+                flex-flow: row wrap;
+                justify-content: center;
+            }
 
-        .caption-style-1 .blur {
-            background-color: rgba(0, 0, 0, 0.65);
-            height: 300px;
-            width: 400px;
-            z-index: 5;
-            position: absolute;
-        }
+            .caption-style-1 li {
+                float: left;
+                padding: 0px;
+                position: relative;
+            }
 
-        .caption-style-1 .caption-text h1 {
-            text-transform: uppercase;
-            font-size: 24px;
-        }
+            .caption-style-1 li:hover .caption {
+                opacity: 1;
+            }
 
-        .caption-style-1 .caption-text {
-            z-index: 10;
-            color: #fff;
-            position: absolute;
-            width: 400px;
-            height: 300px;
-            text-align: center;
-            top: 100px;
-        }
-    </style>
-</head>
-<body>
-    <div class="demo-layout-transparent mdl-layout mdl-js-layout">
-        <header class="mdl-layout__header mdl-layout__header--transparent">
-            <div class="mdl-layout__header-row">
-                <!-- Title -->
+            .caption-style-1 img {
+                margin: 0px;
+                padding: 0px;
+                float: left;
+                z-index: 4;
+            }
+
+            .caption-style-1 .caption {
+                cursor: pointer;
+                position: absolute;
+                opacity: 0;
+                -webkit-transition: all 0.45s ease-in-out;
+                -moz-transition: all 0.45s ease-in-out;
+                -o-transition: all 0.45s ease-in-out;
+                -ms-transition: all 0.45s ease-in-out;
+                transition: all 0.45s ease-in-out;
+            }
+
+            .caption-style-1 .blur {
+                background-color: rgba(0, 0, 0, 0.65);
+                height: 300px;
+                width: 400px;
+                z-index: 5;
+                position: absolute;
+                border-radius: 3px;
+            }
+
+            .caption-style-1 .caption-text h1 {
+                font-family: 'Lobster Two', cursive;
+                font-size: 24px;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .caption-style-1 .caption-text {
+                z-index: 10;
+                color: #fff;
+                position: absolute;
+                width: 400px;
+                height: 300px;
+                text-align: center;
+                top: 100px;
+            }
+
+            .mdl-navigation__link:hover {
+                text-decoration: underline;
+                cursor: pointer;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="demo-layout-transparent mdl-layout mdl-js-layout">
+            <header class="mdl-layout__header mdl-layout__header--transparent">
+                <div class="mdl-layout__header-row">
+                    <!-- Title -->
+                    <div class="logo">
+                        <a href="/" class="mdl-layout-title" id="logo">
+                            <img class="logo" src="{{ url_for('static', filename='myquotes-logo.png') }}"/>
+                        </a>
+                    </div>
+                    <!-- Add spacer, to align navigation to the right -->
+                    <div class="mdl-layout-spacer"></div>
+                    <!-- Navigation -->
+                    <nav class="mdl-navigation">
+                        <a class="mdl-navigation__link" id="nickname" href="/mypage"></a>
+                        <a class="mdl-navigation__link" id="loginout" onclick="logInOut()">login</a>
+                        <a class="mdl-navigation__link" href="https://www.imdb.com/" target="_blank">IMDb</a>
+                        <a class="mdl-navigation__link" href="https://pedia.watcha.com/" target="_blank">Watchapedia</a>
+                    </nav>
+                </div>
+            </header>
+            <div class="mdl-layout__drawer">
                 <span class="mdl-layout-title">MyQuotes</span>
-                <!-- Add spacer, to align navigation to the right -->
-                <div class="mdl-layout-spacer"></div>
-                <!-- Navigation -->
-                <nav class="mdl-navigation">
-                    <a class="mdl-navigation__link-hi" location.href="quotes.html">Post</a>
-                    <a class="mdl-navigation__link" href="https://www.instagram.com/for__sythia">Instagram</a>
-                    <a class="mdl-navigation__link" href="https://blog.naver.com/zachary911">N-Blog</a>
-                    <a class="mdl-navigation__link" href="">Study</a>
-                </nav>
             </div>
-        </header>
-        <div class="mdl-layout__drawer">
-            <span class="mdl-layout-title">MyQuotes</span>
-            <nav class="mdl-navigation">
-                <a class="mdl-navigation__link" location.href="quotes.html">Post</a>
-                <a class="mdl-navigation__link" href="https://www.instagram.com/for__sythia">Instagram</a>
-                <a class="mdl-navigation__link" href="https://blog.naver.com/zachary911">N-Blog</a>
-                <a class="mdl-navigation__link" href="">Study</a>
-            </nav>
-        </div>
-        <main class="mdl-layout__content">
-            <div class="container-a1">
-                <ul class="caption-style-1">
-                    <li>
-                        <img class="img-list" alt=""
-                             src="https://images-na.ssl-images-amazon.com/images/S/pv-target-images/93842fb558722f795af184af186ff66b1ad46a1b78823857ebcd14b5d742ffdb._RI_V_TTW_.jpg"/>
-                        <div class="caption">
-                            <div class="blur"></div>
-                            <div class="caption-text">
-                                <h1>Amazing Caption</h1>
-                                <p>Whatever It Is - Always Awesome</p>
+
+            <main class="mdl-layout__content">
+                <div class="main-page">
+                    <div class="quote-box">
+                        <!-- Floating Multiline Textfield -->
+                        <!-- Textfield with Floating Label -->
+                        <form action="#">
+                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                <input class="mdl-textfield__input" type="text" id="title">
+                                <label class="mdl-textfield__label" for="title">Title</label>
                             </div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </main>
-    </div>
-</body>
+                        </form>
+                        <form action="#">
+                            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                <input class="mdl-textfield__input" type="text" id="img_url">
+                                <label class="mdl-textfield__label" for="img_url">Image URL</label>
+                            </div>
+                        </form>
+                        <form action="#">
+                            <div class="mdl-textfield mdl-js-textfield">
+                                <textarea class="mdl-textfield__input" type="text" rows="3" id="quote"></textarea>
+                                <label class="mdl-textfield__label" for="quote">Quote</label>
+                            </div>
+                        </form>
+                        <!-- Flat button with ripple -->
+                        <a onclick="checkBlank()" class="mdl-button mdl-js-button mdl-js-ripple-effect">
+                            Save
+                        </a>
+                    </div>
+                </div>
+                <p id="blank_space"></p>
+                <div class="img-box">
+                    <ul class="caption-style-1" id="img-container">
+
+                    </ul>
+                </div>
+            </main>
+    </body>
 </html>
