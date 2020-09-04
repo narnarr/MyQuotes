@@ -74,46 +74,9 @@
                     }
                 })
             }
-
-            function checkBlank() {
-                if ($.cookie('mytoken') == undefined) {
-                    alert('Please Login!');
-                } else if ($('#title').val() === "") {
-                    alert('Please enter a title.');
-                    $('#title').focus();
-                } else if ($('#img_url').val() === "") {
-                    alert('Please enter the url.');
-                    $('#img_url').focus();
-                } else if ($('#quote').val() === "") {
-                    alert('Please enter the quote.');
-                    $('#quote').focus();
-                } else {
-                    writeQuote();
-                }
-            }
-
-            function writeQuote() {
-                let title = $('#title').val();
-                let image = $('#img_url').val();
-                let quote = $('#quote').val();
-                let token = $.cookie('mytoken');
-                $.ajax({
-                    type: "POST",
-                    url: "/quote",
-                    data: {'title': title, 'image': image, 'quote': quote, 'token': token},
-                    success: function (response) {
-                        if (response["result"] == "success") {
-                            showQuotes();
-                            alert(response['msg']);
-                            window.location.reload();
-                        }
-                    }
-                })
-                scrollDown();
-            }
+            let moviePoster='';
 
             function searchTitle() {
-                console.log('click')
                 $('#myDropdown').empty();
                 let movie_title = $('#title').val();
                 $.ajax({
@@ -125,7 +88,7 @@
                         for (let i = 0; i < 4; i++) {
                             let movieTitle = movies[i]["Title"];
                             let movieYear = movies[i]["Year"];
-                            let moviePoster = movies[i]["Poster"];
+                            moviePoster = movies[i]["Poster"];
 
                             showResults(movieTitle, movieYear, moviePoster);
                         }
@@ -136,7 +99,7 @@
 
             function showResults(title, year, poster) {
                 let tempHTML = `
-                <li class="drop-info" onclick="selectMovie('${title}','${poster}')">
+                <li class="drop-info" onclick="selectMovie('${title}')">
                     <img class="drop-poster" src="${poster}">
                     <div class="drop-wrap">
                     <div class="drop-title">${title}</div>
@@ -161,9 +124,59 @@
                 }
             }
 
-            function selectMovie(title,poster) {
+            function selectMovie(title) {
                 $('#title').val(title);
-                $('#img_url').val(poster);
+            }
+
+            function checkBlank() {
+                if ($.cookie('mytoken') == undefined) {
+                    alert('Please Login!');
+                } else if ($('#title').val() === "") {
+                    alert('Please enter a title.');
+                    $('#title').focus();
+                } else if ($('#quote').val() === "") {
+                    alert('Please enter the quote.');
+                    $('#quote').focus();
+                } else {
+                    writeQuote();
+                }
+            }
+
+            function writeQuote() {
+                let title = $('#title').val();
+                let image = $('#img_url').val();
+                let quote = $('#quote').val();
+                let token = $.cookie('mytoken');
+                if (image === "") {
+                    $.ajax({
+                        type: "POST",
+                        url: "/quote",
+                        data: {'title': title, 'image': moviePoster, 'quote': quote, 'token': token},
+                        success: function (response) {
+                            if (response["result"] == "success") {
+                                showQuotes();
+                                alert(response['msg']);
+                                window.location.reload();
+                            }
+                        }
+                    })
+                    scrollDown();
+                }
+                else {
+                    $.ajax({
+                        type: "POST",
+                        url: "/quote",
+                        data: {'title': title, 'image': image, 'quote': quote, 'token': token},
+                        success: function (response) {
+                            if (response["result"] == "success") {
+                                showQuotes();
+                                alert(response['msg']);
+                                window.location.reload();
+                            }
+                        }
+                    })
+                    scrollDown();
+                }
             }
 
             function scrollDown() {
@@ -294,7 +307,7 @@
                 padding: 8px 8px 8px 32px;
                 text-decoration: none;
                 font-size: 25px;
-                color: #a15656;
+                color: #5e849a;
                 display: block;
                 transition: 0.3s;
             }
@@ -603,7 +616,7 @@
                             <div class="searchtitle">
                                 <input class="mdl-textfield__input" type="text" id="title">
                                 <button onclick="searchTitle()" class="dropbtn"><i id="search-btn"
-                                                                                  class="fa fa-fw fa-search"></i>
+                                                                                   class="fa fa-fw fa-search"></i>
                                 </button>
                             </div>
                             <label class="mdl-textfield__label" for="title">Title</label>
@@ -623,7 +636,7 @@
                     <form action="#">
                         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
                             <input class="mdl-textfield__input" type="text" id="img_url">
-                            <label class="mdl-textfield__label" for="img_url">Image URL(Optional)</label>
+                            <label class="mdl-textfield__label" for="img_url">Image URL (Optional)</label>
                         </div>
                     </form>
                     <form action="#">
