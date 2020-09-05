@@ -1,16 +1,11 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
     <head>
-        <!-- Webpage Title -->
-        <title>MY Quotes</title>
-
-        <!-- Required meta tags -->
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta charset="UTF-8">
+        <title>My Page</title>
         <!-- JS -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
-
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
                 integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
                 crossorigin="anonymous"></script>
@@ -22,27 +17,39 @@
         <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
         <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
         <!--Google Fonts-->
-        <link href="https://fonts.googleapis.com/css2?family=Acme&family=Lobster+Two:ital,wght@1,700&family=Amatic+SC:wght@700&display=swap"
+        <link href="https://fonts.googleapis.com/css2?family=Acme&family=Lobster+Two:ital,wght@1,700&family=Signika&display=swap"
               rel="stylesheet">
+        <!-- menu-icon -->
+        <script src="https://kit.fontawesome.com/a076d05399.js"></script>
         <script>
             $(document).ready(function () {
                 $('#img-container').empty();
-                checkLogStatus();
+                changeLogStatus();
                 showMyQuotes();
             });
-
-            function checkLogStatus() {
+            function openNav() {
+                document.getElementById("mySidenav").style.width = "250px";
+            }
+            function closeNav() {
+                document.getElementById("mySidenav").style.width = "0";
+            }
+            function changeLogStatus() {
                 if ($.cookie('mytoken') == undefined) {
-                    // mytoken이라는 값으로 쿠키가 없으면, 로그인 창으로 이동시킵니다.
                     $('#loginout').text('Log in');
                 } else {
                     $('#loginout').text('Log out');
-                    // 쿠키가 있으면, 유저 정보를 불러옵니다.
                     load_user_info();
                 }
-            };
-
-            // 쿠키에 가지고 있는 token을 헤더에 담아서 보냅니다.
+            }
+            function logInOut() {
+                if ($.cookie('mytoken') == undefined) {
+                    window.location.href = '/login';
+                } else {
+                    $.removeCookie('mytoken');
+                    alert('Logged out!');
+                    window.location.reload();
+                }
+            }
             function load_user_info() {
                 $.ajax({
                     type: "GET",
@@ -61,8 +68,7 @@
                     }
                 })
             }
-
-            function showMyQuotes() {
+			function showMyQuotes() {
                 $.ajax({
                     type: "GET",
                     url: "/api/mypage",
@@ -81,7 +87,6 @@
                     }
                 })
             }
-
             function makeQuote(title, image, quote, userID) {
                 tempHTML = `
             <li class="img-list">
@@ -97,25 +102,108 @@
             `;
                 $('#img-container').append(tempHTML);
             }
-
         </script>
-        <style type="text/css">
-            .mdl-layout {
-                background: url('https://www.dga.org//-/media/Images/Landscape-Images/DGAQuarterly/1804Fall2018/DGAQFall2018ShotToRememberLittleMissSunshineHero.ashx?as=1&h=630&mh=630&mw=1200&w=630&hash=EEAFD4053AB463581B36643E5A1A1D03A82D36D1?t=12345') center / cover;
+        <style>
+            * {
+                font-family: 'Signika', sans-serif;
+                font-size: 20px;
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                background: url('https://www.dga.org//-/media/Images/Landscape-Images/DGAQuarterly/1804Fall2018/DGAQFall2018ShotToRememberLittleMissSunshineHero.ashx?as=1&h=630&mh=630&mw=1200&w=630&hash=EEAFD4053AB463581B36643E5A1A1D03A82D36D1?t=12345') no-repeat center center fixed;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
             }
 
-            * {
-                font-family: 'Amatic SC', cursive;
+            body {
+                overflow-y: hidden;
+                overflow-x: auto;
             }
             .logo {
                 height: 40px;
                 width: 155px;
                 object-fit: scale-down;
+                float: left;
+                margin: 6px;
             }
-
-            .mdl-layout-title {
-                font-family: 'Acme', sans-serif;
-                font-size: 35px;
+            .menu-icon {
+                float: left;
+                margin: 15px;
+            }
+            .menu-icon:hover, .head-nav:hover, .drop-wrap:hover {
+                cursor: pointer;
+            }
+            .sidenav {
+                height: 100%; /* 100% Full-height */
+                width: 0; /* 0 width - change this with JavaScript */
+                position: fixed; /* Stay in place */
+                z-index: 1; /* Stay on top */
+                top: 0; /* Stay at the top */
+                left: 0;
+                background-color: #ffffff;
+                opacity: 0.7;
+                overflow-x: hidden; /* Disable horizontal scroll */
+                padding-top: 60px; /* Place content 60px from the top */
+                transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+            }
+            /* The navigation menu links */
+            .sidenav a {
+                padding: 8px 8px 8px 32px;
+                text-decoration: none;
+                font-size: 25px;
+                color: #5e849a;
+                display: block;
+                transition: 0.3s;
+            }
+            /* Position and style the close button (top right corner) */
+            .sidenav .closebtn {
+                position: absolute;
+                top: 0;
+                right: 25px;
+                font-size: 36px;
+                margin-left: 50px;
+            }
+            /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+            @media screen and (max-height: 450px) {
+                .sidenav {
+                    padding-top: 15px;
+                }
+                .sidenav a {
+                    font-size: 18px;
+                }
+            }
+            .top-nav {
+                list-style-type: none;
+                margin: 0;
+                overflow: hidden;
+                padding-right: 40px;
+                padding-left: 20px;
+                padding-top: 10px;
+            }
+            .head-nav {
+                float: right;
+            }
+            .head-nav a {
+                display: block;
+                color: white;
+                text-align: center;
+                padding: 14px 16px;
+                text-decoration: none;
+            }
+            .sidenav {
+                padding-top: 100px;
+            }
+            .sidemenu {
+                margin-bottom: 20px;
+            }
+            .main-page {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 20vh;
             }
 
             .img-quote {
@@ -124,39 +212,35 @@
                 width: 400px;
                 border-radius: 3px;
             }
-
             .img-list {
                 margin: 15px;
             }
-
+            .img-box {
+                height: 700px;
+            }
             .caption-style-1 {
                 list-style-type: none;
                 margin: 0px;
-                padding-bottom: 100px;
+                padding: 20px 0 20px 0;
                 display: flex;
                 flex-flow: row wrap;
                 justify-content: center;
             }
-
             .caption-style-1 li {
                 float: left;
                 padding: 0px;
                 position: relative;
             }
-
             .caption-style-1 li:hover .caption {
                 opacity: 1;
             }
-
             .caption-style-1 img {
                 margin: 0px;
                 padding: 0px;
                 float: left;
                 z-index: 4;
             }
-
             .caption-style-1 .caption {
-                cursor: pointer;
                 position: absolute;
                 opacity: 0;
                 -webkit-transition: all 0.45s ease-in-out;
@@ -165,7 +249,6 @@
                 -ms-transition: all 0.45s ease-in-out;
                 transition: all 0.45s ease-in-out;
             }
-
             .caption-style-1 .blur {
                 background-color: rgba(0, 0, 0, 0.65);
                 height: 300px;
@@ -174,58 +257,65 @@
                 position: absolute;
                 border-radius: 3px;
             }
-
             .caption-style-1 .caption-text h1 {
                 font-family: 'Lobster Two', cursive;
+                color: #fffdf7;
                 font-size: 24px;
                 padding-left: 20px;
                 padding-right: 20px;
             }
-
             .caption-style-1 .caption-text {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
                 z-index: 10;
                 color: #fff;
                 position: absolute;
                 width: 400px;
                 height: 300px;
                 text-align: center;
-                top: 100px;
             }
-            .mdl-navigation__link:hover {
-                text-decoration: underline;
-                cursor: pointer;
+            .icon-part {
+                width: 23px;
+                height: 3px;
+                background-color: white;
+                margin: 5px 0;
+                border-radius: 2px;
             }
         </style>
     </head>
     <body>
-        <div class="demo-layout-transparent mdl-layout mdl-js-layout">
-            <header class="mdl-layout__header mdl-layout__header--transparent">
-                <div class="mdl-layout__header-row">
+        <div class="container">
+            <nav>
+                <ul class="top-nav">
+                    <span class="menu-icon" onclick="openNav()">
+                        <div class="icon-part"></div>
+                        <div class="icon-part"></div>
+                        <div class="icon-part"></div>
+                    </span>
                     <!-- Title -->
-                    <div class="logo">
-                        <a href="/" class="mdl-layout-title" id="logo">
+                    <li class="logo">
+                        <a href="/" id="logo">
                             <img class="logo" src="{{ url_for('static', filename='myquotes-logo.png') }}"/>
                         </a>
-                    </div>
-                    <!-- Add spacer, to align navigation to the right -->
-                    <div class="mdl-layout-spacer"></div>
-                    <!-- Navigation -->
-                    <nav class="mdl-navigation">
-                        <a class="mdl-navigation__link" id="nickname" href="window.location.href='/myPage'"></a>
-                        <a class="mdl-navigation__link" id="loginout" onclick="logInOut()">login</a>
-                        <a class="mdl-navigation__link" href="https://www.imdb.com/" target="_blank">IMDb</a>
-                        <a class="mdl-navigation__link" href="https://pedia.watcha.com/" target="_blank">Watchapedia</a>
-                    </nav>
-                </div>
-            </header>
-            <div class="mdl-layout__drawer">
-                <span class="mdl-layout-title">MyQuotes</span>
-            </div>
-
-            <main class="mdl-layout__content">
+                    </li>
+                    <li class="head-nav"><a href="https://pedia.watcha.com/" target="_blank">Watchpedia</a></li>
+                    <li class="head-nav"><a href="https://www.imdb.com/" target="_blank">IMDb</a></li>
+                    <li class="head-nav"><a id="loginout" onclick="logInOut()">login</a></li>
+                    <li class="head-nav"><a id="nickname" href="/mypage"></a></li>
+                </ul>
+            </nav>
+            <aside id="mySidenav" class="sidenav">
+                <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+                <a class="sidemenu" href="/mypage">My page</a>
+                <a class="sidemenu" href="#">Movies</a>
+                <a class="sidemenu" href="#">Other users</a>
+                <a class="sidemenu" href="#">Contact</a>
+            </aside>
+            <div class="main-page">
                 <div class="img-box">
                     <ul class="caption-style-1" id="img-container">
-                        <li>
+                        <li class="img-list">
                             <img class="img-quote" alt=""
                                  src="https://images-na.ssl-images-amazon.com/images/S/pv-target-images/93842fb558722f795af184af186ff66b1ad46a1b78823857ebcd14b5d742ffdb._RI_V_TTW_.jpg"/>
                             <div class="caption">
@@ -238,6 +328,7 @@
                         </li>
                     </ul>
                 </div>
-            </main>
+            </div>
+        </div>
     </body>
 </html>

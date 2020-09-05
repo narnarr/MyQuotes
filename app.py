@@ -2,7 +2,7 @@ from flask import Flask, render_template, jsonify, request, session, redirect, u
 app = Flask(__name__)
 
 from pymongo import MongoClient
-client = MongoClient('localhost', 27017)
+client = MongoClient('mongodb://test:test@localhost', 27017)
 db = client.dbsparta
 
 # JWT 토큰을 만들 때 필요한 비밀문자열입니다. 아무거나 입력해도 괜찮.
@@ -62,7 +62,7 @@ def api_login():
    if result is not None:
       payload = {
          'id': id_receive,
-         'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
+         'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=30)
       }
       token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
 

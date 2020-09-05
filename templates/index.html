@@ -17,7 +17,7 @@
         <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
         <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
         <!--Google Fonts-->
-        <link href="https://fonts.googleapis.com/css2?family=Acme&family=Lobster+Two:ital,wght@1,700&family=Yanone+Kaffeesatz:wght@600&display=swap"
+        <link href="https://fonts.googleapis.com/css2?family=Acme&family=Lobster+Two:ital,wght@1,700&family=Signika&display=swap"
               rel="stylesheet">
         <!-- menu-icon -->
         <script src="https://kit.fontawesome.com/a076d05399.js"></script>
@@ -26,7 +26,8 @@
             $(document).ready(function () {
                 $('#img-container').empty();
                 changeLogStatus();
-                showQuotes();
+                showQuotes(1);
+                paging(dataPerPage, pageCount, 1);
             })
 
             function openNav() {
@@ -74,7 +75,8 @@
                     }
                 })
             }
-            let moviePoster='';
+
+            let moviePoster = '';
 
             function searchTitle() {
                 $('#myDropdown').empty();
@@ -99,7 +101,7 @@
 
             function showResults(title, year, poster) {
                 let tempHTML = `
-                <li class="drop-info" onclick="selectMovie('${title}')">
+                <li class="drop-info" onclick="selectMovie('${title}', '${poster}')">
                     <img class="drop-poster" src="${poster}">
                     <div class="drop-wrap">
                     <div class="drop-title">${title}</div>
@@ -124,8 +126,9 @@
                 }
             }
 
-            function selectMovie(title) {
+            function selectMovie(title, poster) {
                 $('#title').val(title);
+                moviePoster = poster;
             }
 
             function checkBlank() {
@@ -154,22 +157,21 @@
                         data: {'title': title, 'image': moviePoster, 'quote': quote, 'token': token},
                         success: function (response) {
                             if (response["result"] == "success") {
-                                showQuotes();
+                                showQuotes(1);
                                 alert(response['msg']);
                                 window.location.reload();
                             }
                         }
                     })
                     scrollDown();
-                }
-                else {
+                } else {
                     $.ajax({
                         type: "POST",
                         url: "/quote",
                         data: {'title': title, 'image': image, 'quote': quote, 'token': token},
                         success: function (response) {
                             if (response["result"] == "success") {
-                                showQuotes();
+                                showQuotes(1);
                                 alert(response['msg']);
                                 window.location.reload();
                             }
@@ -182,51 +184,6 @@
             function scrollDown() {
                 var location = document.querySelector(".img-box").offsetTop;
                 window.scrollTo({top: location, behavior: 'smooth'});
-            }
-
-            function showQuotes() {
-                $.ajax({
-                    type: "GET",
-                    url: "/quote",
-                    data: {},
-                    success: function (response) {
-                        if (response["result"] == "success") {
-                            let quotes = response['quotes'].reverse();
-                            for (let i = 0; i < 6; i++) {
-                                let {title, image, quote, userID} = quotes[i];
-                                makeQuote(title, image, quote, userID);
-                            }
-                        } else {
-                            alert("정보를 받아오지 못했습니다");
-                        }
-                    }
-                })
-            }
-
-            function pagination(page) {
-                $('.pagination a').removeClass('active');
-                let page_num = `#page_${page}`
-                $(page_num).addClass('active');
-                $.ajax({
-                    type: "GET",
-                    url: "/quote",
-                    data: {},
-                    success: function (response) {
-                        $('#img-container').empty();
-                        if (response["result"] == "success") {
-                            let quotes = response['quotes'].reverse();
-                            let start = (page - 1) * 6;
-                            let last = page * 6;
-
-                            for (let i = start; i < last; i++) {
-                                let {title, image, quote, userID} = quotes[i];
-                                makeQuote(title, image, quote, userID);
-                            }
-                        } else {
-                            alert("정보를 받아오지 못했습니다");
-                        }
-                    }
-                })
             }
 
             function makeQuote(title, image, quote, userID) {
@@ -244,11 +201,90 @@
             `;
                 $('#img-container').append(tempHTML);
             }
+
+            let dataPerPage = 6;
+            let pageCount = 5;
+
+            function showQuotes(page) {
+                $.ajax({
+                    type: "GET",
+                    url: "/quote",
+                    data: {},
+                    success: function (response) {
+                        $('#img-container').empty();
+                        if (response["result"] == "success") {
+                            let quotes = response['quotes'].reverse();
+                            let start = (page - 1) * dataPerPage;
+                            let last = page * dataPerPage -1;
+                            for (let i = start; i <= last; i++) {
+                                let {title, image, quote, userID} = quotes[i];
+                                makeQuote(title, image, quote, userID);
+                            }
+                        } else {
+                            alert("Oops, something went wrong!");
+                        }
+                    }
+                })
+            }
+
+            function paging(dataPerPage, pageCount, currentPage) {
+                $.ajax({
+                    type: "GET",
+                    url: "/quote",
+                    data: {},
+                    success: function (response) {
+                        if (response["result"] == "success") {
+                            let totalData = response['quotes'].length;
+
+                            let totalPage = Math.ceil(totalData / dataPerPage);    // 총 페이지 수
+                            let pageGroup = Math.ceil(currentPage / pageCount);    // 페이지 그룹
+
+                            let last = pageGroup * pageCount;    // 화면에 보여질 마지막 페이지 번호
+                            if (last > totalPage)
+                                last = totalPage;
+                            let first = last - (pageCount - 1);    // 화면에 보여질 첫번째 페이지 번호
+                            if (first <= 0)
+                                first = 1;
+                            let next = last + 1;
+                            let prev = first - 1;
+
+                            let tempHtml = "";
+
+                            if (prev > 0)
+                                tempHtml += "<a href=# id='prev'><</a> ";
+
+                            for (let i = first; i <= last; i++) {
+                                tempHtml += `<a class="page-cnt" onclick="showQuotes('${i}')" id="${i}">${i}</a>`;
+                            }
+
+                            if (last < totalPage)
+                                tempHtml += "<a href=# id='next'>></a>";
+
+                            $("#paging").html(tempHtml);    // 페이지 목록 생성
+                            $("#paging a#" + currentPage).css({
+                                "background-color": "rgba(102, 172, 229, 0.7)",
+                                "color": "white"
+                            });    // 현재 페이지 표시
+
+                            $("#paging a").click(function () {
+                                let $item = $(this);
+                                let $id = $item.attr("id");
+                                let selectedPage = $item.text();
+
+                                if ($id == "next") selectedPage = next;
+                                if ($id == "prev") selectedPage = prev;
+
+                                paging(dataPerPage, pageCount, selectedPage);
+                            });
+                        }
+                    }
+                })
+            }
         </script>
 
         <style>
             * {
-                font-family: 'Yanone Kaffeesatz', sans-serif;
+                font-family: 'Signika', sans-serif;
                 font-size: 20px;
                 margin: 0;
                 padding: 0;
@@ -412,11 +448,6 @@
                 z-index: 1;
             }
 
-            * {
-                margin: 0;
-                padding: 0;
-            }
-
             .dropdown-content li {
                 color: black;
                 padding: 12px 16px;
@@ -553,7 +584,7 @@
             }
 
             /* Pagination links */
-            .pagination a {
+            .pagination-wrapper a {
                 background-color: rgba(255, 255, 255, 0.7);
                 color: black;
                 float: left;
@@ -562,21 +593,19 @@
                 transition: background-color .3s;
             }
 
-            /* Style the active/current link */
-            .pagination a.active {
-                background-color: rgba(102, 172, 229, 0.7);
-                color: white;
-            }
-
             /* Add a grey background color on mouse-over */
-            .pagination a:hover:not(.active) {
+            .pagination-wrapper a:hover {
                 background-color: #ddd;
             }
 
-            .pagination {
+            .pagination-wrapper {
                 display: flex;
                 justify-content: center;
                 margin-bottom: 20px;
+            }
+
+            .page-cnt {
+                cursor: pointer;
             }
         </style>
     </head>
@@ -640,7 +669,7 @@
                         </div>
                     </form>
                     <form action="#">
-                        <div class="mdl-textfield mdl-js-textfield">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
                             <textarea class="mdl-textfield__input" type="text" rows="3" id="quote"></textarea>
                             <label class="mdl-textfield__label" for="quote">Quote</label>
                         </div>
@@ -657,15 +686,8 @@
                 <ul class="caption-style-1" id="img-container">
                 </ul>
             </div>
-            <div class="pagination">
-                <a href="#">&laquo;</a>
-                <a id="page_1" onclick="pagination(1)">1</a>
-                <a id="page_2" onclick="pagination(2)">2</a>
-                <a id="page_3" onclick="pagination(3)">3</a>
-                <a id="page_4" onclick="pagination(4)">4</a>
-                <a id="page_5" onclick="pagination(5)">5</a>
-                <a id="page_6" onclick="pagination(6)">6</a>
-                <a href="#">&raquo;</a>
+            <div class="pagination-wrapper" id="paging">
+
             </div>
         </div>
     </body>
