@@ -21,4 +21,4 @@
 - [OMDB API](https://www.omdbapi.com/) : 영화 검색에 사용
 
 ## Links
-- 시연 영상: 
+- 시연 영상: https://www.youtube.com/watch?v=jjWqdLxKn-I
